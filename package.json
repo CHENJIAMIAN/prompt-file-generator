@@ -1,0 +1,199 @@
+{
+  "name": "prompt-file-generator",
+  "displayName": "提示词文件生成器",
+  "description": "从资源管理器中的一个或多个文件生成基于提示词的新文件，支持 OpenAI 兼容 API。",
+  "version": "0.2.1",
+  "publisher": "CHENJIAMIAN",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CHENJIAMIAN/prompt-file-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/CHENJIAMIAN/prompt-file-generator/issues"
+  },
+  "homepage": "https://github.com/CHENJIAMIAN/prompt-file-generator#readme",
+  "engines": {
+    "vscode": "^1.107.0"
+  },
+  "categories": [
+    "Other",
+    "Machine Learning"
+  ],
+  "keywords": [
+    "llm",
+    "openai-compatible",
+    "file-generation",
+    "prompt"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onCommand:promptFileGenerator.generateFiles",
+    "onCommand:promptFileGenerator.configureProvider",
+    "onCommand:promptFileGenerator.openSettings",
+    "onCommand:promptFileGenerator.openProviderJson"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "promptFileGenerator.generateFiles",
+        "title": "根据提示词生成新文件...",
+        "category": "提示词文件生成器"
+      },
+      {
+        "command": "promptFileGenerator.configureProvider",
+        "title": "配置模型服务...",
+        "category": "提示词文件生成器"
+      },
+      {
+        "command": "promptFileGenerator.openSettings",
+        "title": "打开设置",
+        "category": "提示词文件生成器"
+      },
+      {
+        "command": "promptFileGenerator.openProviderJson",
+        "title": "打开提供商 JSON 配置",
+        "category": "提示词文件生成器"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "promptFileGenerator.generateFiles",
+          "when": "resourceScheme == file && !explorerResourceIsFolder",
+          "group": "navigation@100"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "提示词文件生成器",
+      "properties": {
+        "promptFileGenerator.providers": {
+          "type": "array",
+          "default": [
+            {
+              "id": "openai",
+              "name": "OpenAI",
+              "baseUrl": "api.openai.com",
+              "model": "gpt-4.1-mini",
+              "maxTokensParameter": "max_tokens"
+            }
+          ],
+          "scope": "window",
+          "description": "模型服务 JSON 配置档。运行“提示词文件生成器: 打开提供商 JSON 配置”会把此默认示例写入 User Settings JSON，之后可直接修改。API Key 保存在 VS Code 安全存储中，不会写入这里。",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "baseUrl",
+              "model"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "配置档内部标识。"
+              },
+              "name": {
+                "type": "string",
+                "description": "显示名称。"
+              },
+              "baseUrl": {
+                "type": "string",
+                "description": "OpenAI Chat Completions API 基地址。支持 api.openai.com、https://api.openai.com、localhost:11434、完整 /v1 或完整 /chat/completions 地址。"
+              },
+              "model": {
+                "type": "string",
+                "description": "要调用的模型 ID。"
+              },
+              "maxTokensParameter": {
+                "type": "string",
+                "enum": [
+                  "max_tokens",
+                  "max_completion_tokens",
+                  "none"
+                ],
+                "default": "max_tokens",
+                "description": "该服务用于限制最大输出的请求字段。"
+              },
+              "headers": {
+                "type": "object",
+                "default": {},
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "可选自定义请求头。可使用 ${apiKey} 引用安全存储中的密钥，例如 {\"api-key\": \"${apiKey}\"}。"
+              }
+            }
+          }
+        },
+        "promptFileGenerator.activeProvider": {
+          "type": "string",
+          "default": "openai",
+          "scope": "window",
+          "description": "当前默认使用的模型服务配置档 ID；默认示例为 openai。"
+        },
+        "promptFileGenerator.maxInputCharacters": {
+          "type": "number",
+          "default": 120000,
+          "minimum": 1000,
+          "maximum": 500000,
+          "scope": "window",
+          "description": "每个源文件允许发送给模型的最大字符数。超过该限制的文件会被跳过，避免静默截断。"
+        },
+        "promptFileGenerator.maxOutputTokens": {
+          "type": "number",
+          "default": 8192,
+          "minimum": 1,
+          "maximum": 128000,
+          "scope": "window",
+          "description": "每次生成请求的最大输出 token 数。"
+        },
+        "promptFileGenerator.temperature": {
+          "type": "number",
+          "default": 0.2,
+          "minimum": 0,
+          "maximum": 2,
+          "scope": "window",
+          "description": "生成随机性。较低数值更适合确定性的文件转换。"
+        },
+        "promptFileGenerator.concurrency": {
+          "type": "number",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 8,
+          "scope": "window",
+          "description": "批量生成时并发调用模型服务的数量。"
+        },
+        "promptFileGenerator.fileNameTemplate": {
+          "type": "string",
+          "default": "${name}.${tag}.ai${ext}",
+          "scope": "window",
+          "description": "生成文件名模板。可用变量：${name} 为原文件主名，${tag} 为提示词短标签，${ext} 为原扩展名。默认示例：A.translate-en.ai.ts。"
+        }
+      }
+    }
+  },
+  "files": [
+    "out/**",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "test": "vitest run",
+    "lint": "biome check src test",
+    "format": "biome format --write src test",
+    "package": "vsce package --no-dependencies --allow-missing-repository"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/vscode": "^1.107.0",
+    "@vscode/vsce": "^3.6.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.0"
+  }
+}
