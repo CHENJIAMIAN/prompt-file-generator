@@ -14,7 +14,9 @@ const PROVIDER_JSON_COMMAND = 'promptFileGenerator.openProviderJson';
 
 export function activate(context: vscode.ExtensionContext): void {
   const providerStore = new ProviderStore(context.secrets);
-  const outputChannel = vscode.window.createOutputChannel('提示词文件生成器');
+  const outputChannel = vscode.window.createOutputChannel(
+    vscode.l10n.t('Prompt File Generator'),
+  );
 
   context.subscriptions.push(
     outputChannel,
@@ -51,7 +53,7 @@ async function handleGenerateCommand(
         canSelectFiles: true,
         canSelectFolders: false,
         canSelectMany: true,
-        title: '选择要根据提示词生成新文件的源文件',
+        title: vscode.l10n.t('Select source files for prompt-based generation'),
       })) ?? [];
   }
 
@@ -61,11 +63,12 @@ async function handleGenerateCommand(
 
   let profile = providerStore.getActiveProfile();
   if (!profile) {
+    const configureAction = vscode.l10n.t('Configure Model Provider');
     const action = await vscode.window.showWarningMessage(
-      '请先配置一个 OpenAI 兼容的模型服务。',
-      '配置模型服务',
+      vscode.l10n.t('Configure an OpenAI-compatible model provider first.'),
+      configureAction,
     );
-    if (action !== '配置模型服务') {
+    if (action !== configureAction) {
       return;
     }
 
@@ -77,11 +80,19 @@ async function handleGenerateCommand(
   }
 
   const prompt = await vscode.window.showInputBox({
-    title: `根据提示词生成 ${sourceUris.length} 个新文件`,
-    prompt: '描述要基于每个源文件完成的转换',
-    placeHolder: '例如：将内容翻译成英文，并保持原有结构',
+    title: vscode.l10n.t(
+      'Generate {0} new files from a prompt',
+      sourceUris.length,
+    ),
+    prompt: vscode.l10n.t(
+      'Describe the transformation to apply to each source file',
+    ),
+    placeHolder: vscode.l10n.t(
+      'For example: Translate the content into English while preserving its structure',
+    ),
     ignoreFocusOut: true,
-    validateInput: (value) => (value.trim() ? undefined : '提示词不能为空。'),
+    validateInput: (value) =>
+      value.trim() ? undefined : vscode.l10n.t('The prompt cannot be empty.'),
   });
   if (prompt === undefined) {
     return;
@@ -92,13 +103,19 @@ async function handleGenerateCommand(
   const settings = getGenerationSettings();
 
   outputChannel.appendLine(
-    `[${new Date().toLocaleString()}] 开始处理 ${sourceUris.length} 个文件，服务：${profile.name}，模型：${profile.model}`,
+    vscode.l10n.t(
+      '[{0}] Started processing {1} files. Provider: {2}; model: {3}',
+      new Date().toLocaleString(),
+      sourceUris.length,
+      profile.name,
+      profile.model,
+    ),
   );
 
   const result = await vscode.window.withProgress(
     {
       location: vscode.ProgressLocation.Notification,
-      title: '提示词文件生成器：正在生成文件',
+      title: vscode.l10n.t('Prompt File Generator: Generating files'),
       cancellable: true,
     },
     async (progress, token) =>
@@ -189,23 +206,37 @@ function writeResultToOutput(
   result: BatchGenerationResult,
 ): void {
   outputChannel.appendLine(
-    `统一文件名标签：${result.tag}${result.usedPromptFallbackTag ? '（由提示词回退生成）' : ''}`,
+    vscode.l10n.t(
+      'Unified filename tag: {0}{1}',
+      result.tag,
+      result.usedPromptFallbackTag
+        ? vscode.l10n.t(' (generated from prompt fallback)')
+        : '',
+    ),
   );
 
   for (const generated of result.generated) {
     outputChannel.appendLine(
-      `已生成：${generated.source.fsPath} -> ${generated.target.fsPath}`,
+      vscode.l10n.t(
+        'Generated: {0} -> {1}',
+        generated.source.fsPath,
+        generated.target.fsPath,
+      ),
     );
   }
 
   for (const failure of result.failures) {
     outputChannel.appendLine(
-      `失败：${failure.source.fsPath}：${failure.message}`,
+      vscode.l10n.t('Failed: {0}: {1}', failure.source.fsPath, failure.message),
     );
   }
 
   if (result.cancelled) {
-    outputChannel.appendLine('任务已取消，已保留取消前成功写入的文件。');
+    outputChannel.appendLine(
+      vscode.l10n.t(
+        'The task was cancelled. Files written before cancellation were preserved.',
+      ),
+    );
   }
 }
 
@@ -215,40 +246,52 @@ async function showResult(
 ): Promise<void> {
   const generatedCount = result.generated.length;
   const failedCount = result.failures.length;
+  const viewDetails = vscode.l10n.t('View Details');
+  const openFirst = vscode.l10n.t('Open First File');
 
   if (generatedCount === 0) {
     const action = await vscode.window.showErrorMessage(
       result.cancelled
-        ? '文件生成已取消，未写入新文件。'
-        : `没有生成文件。${failedCount > 0 ? `有 ${failedCount} 个文件失败。` : ''}`,
-      '查看详情',
+        ? vscode.l10n.t(
+            'File generation was cancelled. No new files were written.',
+          )
+        : failedCount > 0
+          ? vscode.l10n.t(
+              'No files were generated. {0} files failed.',
+              failedCount,
+            )
+          : vscode.l10n.t('No files were generated.'),
+      viewDetails,
     );
-    if (action === '查看详情') {
+    if (action === viewDetails) {
       outputChannel.show(true);
     }
     return;
   }
 
-  const summary = `已生成 ${generatedCount} 个新文件，统一标签为“${result.tag}”。`;
+  const summary = vscode.l10n.t(
+    'Generated {0} new files with the unified tag "{1}".',
+    generatedCount,
+    result.tag,
+  );
   const details = result.cancelled
-    ? `${summary} 操作已取消，结果可能不完整。`
+    ? vscode.l10n.t(
+        '{0} The operation was cancelled, so the results may be incomplete.',
+        summary,
+      )
     : failedCount > 0
-      ? `${summary} 另有 ${failedCount} 个文件失败。`
+      ? vscode.l10n.t('{0} Another {1} files failed.', summary, failedCount)
       : summary;
   const action =
     failedCount > 0 || result.cancelled
-      ? await vscode.window.showWarningMessage(
-          details,
-          '查看详情',
-          '打开第一个',
-        )
-      : await vscode.window.showInformationMessage(details, '打开第一个');
+      ? await vscode.window.showWarningMessage(details, viewDetails, openFirst)
+      : await vscode.window.showInformationMessage(details, openFirst);
 
-  if (action === '查看详情') {
+  if (action === viewDetails) {
     outputChannel.show(true);
   }
 
-  if (action === '打开第一个') {
+  if (action === openFirst) {
     const first = result.generated[0]?.target;
     if (first) {
       const document = await vscode.workspace.openTextDocument(first);

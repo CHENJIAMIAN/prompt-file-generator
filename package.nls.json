@@ -1,0 +1,23 @@
+{
+  "extension.displayName": "Prompt File Generator",
+  "extension.description": "Generate new prompt-derived files from one or more Explorer files using OpenAI-compatible APIs.",
+  "command.category": "Prompt File Generator",
+  "command.generateFiles.title": "Generate New Files from Prompt...",
+  "command.configureProvider.title": "Configure Model Provider...",
+  "command.openSettings.title": "Open Settings",
+  "command.openProviderJson.title": "Open Provider JSON Configuration",
+  "configuration.title": "Prompt File Generator",
+  "config.providers.description": "Model provider profiles in JSON. Run 'Prompt File Generator: Open Provider JSON Configuration' to add the default example to User Settings JSON and edit it directly. API keys are stored in VS Code SecretStorage and are never written here.",
+  "config.providers.id.description": "The internal profile identifier.",
+  "config.providers.name.description": "The display name.",
+  "config.providers.baseUrl.description": "The OpenAI Chat Completions API base URL. Supports api.openai.com, https://api.openai.com, localhost:11434, a complete /v1 URL, or a complete /chat/completions URL.",
+  "config.providers.model.description": "The model ID to call.",
+  "config.providers.maxTokensParameter.description": "The request field this provider uses to limit maximum output.",
+  "config.providers.headers.description": "Optional custom request headers. Use ${apiKey} to reference the key in SecretStorage, for example {\"api-key\": \"${apiKey}\"}.",
+  "config.activeProvider.description": "The ID of the default model provider profile. The default example is openai.",
+  "config.maxInputCharacters.description": "The maximum number of characters sent from each source file. Files over this limit are skipped instead of silently truncated.",
+  "config.maxOutputTokens.description": "The maximum output tokens for each generation request.",
+  "config.temperature.description": "Generation randomness. Lower values are better for deterministic file transformations.",
+  "config.concurrency.description": "The number of concurrent model-provider requests during batch generation.",
+  "config.fileNameTemplate.description": "The generated filename template. Variables: ${name} is the source basename, ${tag} is the short prompt tag, and ${ext} is the source extension. Example: A.translate-en.ai.ts."
+}

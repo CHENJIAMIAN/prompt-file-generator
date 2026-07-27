@@ -29,44 +29,52 @@ export async function configureProvider(store: ProviderStore): Promise<void> {
   const action = await vscode.window.showQuickPick<ConfigurationActionItem>(
     [
       {
-        label: '新建模型服务',
-        detail: '添加一个 OpenAI 兼容 API 配置档',
+        label: vscode.l10n.t('Create Model Provider'),
+        detail: vscode.l10n.t('Add an OpenAI-compatible API profile'),
         action: 'create',
       },
       {
-        label: '打开提供商 JSON 配置',
-        detail: '写入默认示例到 settings.json 后直接编辑',
+        label: vscode.l10n.t('Open Provider JSON Configuration'),
+        detail: vscode.l10n.t(
+          'Add the default example to settings.json and edit it directly',
+        ),
         action: 'openJson',
       },
       {
-        label: '编辑模型服务',
-        detail: '修改地址、模型、请求头或 API Key',
+        label: vscode.l10n.t('Edit Model Provider'),
+        detail: vscode.l10n.t(
+          'Change the URL, model, request headers, or API key',
+        ),
         action: 'edit',
       },
       {
-        label: '设为默认服务',
-        detail: '右键生成时默认使用的配置档',
+        label: vscode.l10n.t('Set as Default Provider'),
+        detail: vscode.l10n.t(
+          'Use this profile by default when generating from Explorer',
+        ),
         action: 'setDefault',
       },
       {
-        label: '测试模型服务',
-        detail: '发送一条极短的测试请求',
+        label: vscode.l10n.t('Test Model Provider'),
+        detail: vscode.l10n.t('Send a very short test request'),
         action: 'test',
       },
       {
-        label: '清除服务 API Key',
-        detail: '仅删除安全存储中的密钥',
+        label: vscode.l10n.t('Clear Provider API Key'),
+        detail: vscode.l10n.t('Delete only the key stored in SecretStorage'),
         action: 'clearKey',
       },
       {
-        label: '删除模型服务',
-        detail: '删除配置档及其安全存储中的 API Key',
+        label: vscode.l10n.t('Delete Model Provider'),
+        detail: vscode.l10n.t(
+          'Delete the profile and its API key from SecretStorage',
+        ),
         action: 'delete',
       },
     ],
     {
-      title: '提示词文件生成器：模型服务',
-      placeHolder: '选择要执行的操作',
+      title: vscode.l10n.t('Prompt File Generator: Model Providers'),
+      placeHolder: vscode.l10n.t('Select an action'),
     },
   );
 
@@ -97,7 +105,7 @@ export async function configureProvider(store: ProviderStore): Promise<void> {
   if (action.action === 'setDefault') {
     await store.setActiveProvider(profile.id);
     void vscode.window.showInformationMessage(
-      `已将“${profile.name}”设为默认模型服务。`,
+      vscode.l10n.t('Set "{0}" as the default model provider.', profile.name),
     );
     return;
   }
@@ -108,28 +116,32 @@ export async function configureProvider(store: ProviderStore): Promise<void> {
   }
 
   if (action.action === 'clearKey') {
+    const clearAction = vscode.l10n.t('Clear');
     const confirmation = await vscode.window.showWarningMessage(
-      `确定清除“${profile.name}”的 API Key 吗？`,
+      vscode.l10n.t('Clear the API key for "{0}"?', profile.name),
       { modal: true },
-      '清除',
+      clearAction,
     );
-    if (confirmation === '清除') {
+    if (confirmation === clearAction) {
       await store.clearApiKey(profile.id);
       void vscode.window.showInformationMessage(
-        `已清除“${profile.name}”的 API Key。`,
+        vscode.l10n.t('Cleared the API key for "{0}".', profile.name),
       );
     }
     return;
   }
 
+  const deleteAction = vscode.l10n.t('Delete');
   const confirmation = await vscode.window.showWarningMessage(
-    `确定删除“${profile.name}”及其 API Key 吗？`,
+    vscode.l10n.t('Delete "{0}" and its API key?', profile.name),
     { modal: true },
-    '删除',
+    deleteAction,
   );
-  if (confirmation === '删除') {
+  if (confirmation === deleteAction) {
     await store.removeProfile(profile.id);
-    void vscode.window.showInformationMessage(`已删除“${profile.name}”。`);
+    void vscode.window.showInformationMessage(
+      vscode.l10n.t('Deleted "{0}".', profile.name),
+    );
   }
 }
 
@@ -138,8 +150,10 @@ async function createOrEditProfile(
   existing?: ProviderProfile,
 ): Promise<void> {
   const name = await vscode.window.showInputBox({
-    title: existing ? '编辑模型服务' : '新建模型服务',
-    prompt: '服务显示名称',
+    title: existing
+      ? vscode.l10n.t('Edit Model Provider')
+      : vscode.l10n.t('Create Model Provider'),
+    prompt: vscode.l10n.t('Provider display name'),
     value: existing?.name ?? '',
     validateInput: validateRequiredText,
   });
@@ -148,10 +162,14 @@ async function createOrEditProfile(
   }
 
   const baseUrl = await vscode.window.showInputBox({
-    title: existing ? '编辑模型服务' : '新建模型服务',
-    prompt: 'OpenAI Chat Completions API 基地址',
+    title: existing
+      ? vscode.l10n.t('Edit Model Provider')
+      : vscode.l10n.t('Create Model Provider'),
+    prompt: vscode.l10n.t('OpenAI Chat Completions API base URL'),
     value: existing?.baseUrl ?? 'api.openai.com',
-    placeHolder: '例如 api.openai.com、localhost:11434 或完整 API 地址',
+    placeHolder: vscode.l10n.t(
+      'For example: api.openai.com, localhost:11434, or a complete API URL',
+    ),
     validateInput: validateBaseUrl,
   });
   if (baseUrl === undefined) {
@@ -159,10 +177,12 @@ async function createOrEditProfile(
   }
 
   const model = await vscode.window.showInputBox({
-    title: existing ? '编辑模型服务' : '新建模型服务',
-    prompt: '模型 ID',
+    title: existing
+      ? vscode.l10n.t('Edit Model Provider')
+      : vscode.l10n.t('Create Model Provider'),
+    prompt: vscode.l10n.t('Model ID'),
     value: existing?.model ?? '',
-    placeHolder: '例如 gpt-4.1-mini',
+    placeHolder: vscode.l10n.t('For example: gpt-4.1-mini'),
     validateInput: validateRequiredText,
   });
   if (model === undefined) {
@@ -170,11 +190,19 @@ async function createOrEditProfile(
   }
 
   const apiKey = await vscode.window.showInputBox({
-    title: existing ? '更新 API Key（安全存储）' : '设置 API Key（安全存储）',
+    title: existing
+      ? vscode.l10n.t('Update API Key (SecretStorage)')
+      : vscode.l10n.t('Set API Key (SecretStorage)'),
     prompt: existing
-      ? '在这里输入真实 API Key。留空会保留原有密钥；可通过“清除服务 API Key”单独删除。'
-      : '在这里输入真实 API Key。本地无鉴权服务可留空；密钥不会写入 settings.json。',
-    placeHolder: '例如 sk-... 或服务商提供的 API Key',
+      ? vscode.l10n.t(
+          'Enter the API key here. Leave it empty to keep the existing key; use "Clear Provider API Key" to delete it separately.',
+        )
+      : vscode.l10n.t(
+          'Enter the API key here. Leave it empty for local providers without authentication. The key is never written to settings.json.',
+        ),
+    placeHolder: vscode.l10n.t(
+      'For example: sk-... or the API key supplied by the provider',
+    ),
     password: true,
     ignoreFocusOut: true,
   });
@@ -190,10 +218,17 @@ async function createOrEditProfile(
   }
 
   const headerJson = await vscode.window.showInputBox({
-    title: existing ? '编辑模型服务' : '新建模型服务',
-    prompt: '高级选项：自定义请求头 JSON（大多数服务留空）',
+    title: existing
+      ? vscode.l10n.t('Edit Model Provider')
+      : vscode.l10n.t('Create Model Provider'),
+    prompt: vscode.l10n.t(
+      'Advanced: custom request headers as JSON (leave empty for most providers)',
+    ),
     value: existing?.headers ? JSON.stringify(existing.headers) : '',
-    placeHolder: `一般留空；Azure 等特殊鉴权示例：{"api-key":"\${apiKey}"}`,
+    placeHolder: vscode.l10n.t(
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: ${apiKey} is a literal SecretStorage placeholder.
+      'Usually empty. Example for Azure-style authentication: {"api-key":"${apiKey}"}',
+    ),
     validateInput: validateHeaders,
   });
   if (headerJson === undefined) {
@@ -220,8 +255,8 @@ async function createOrEditProfile(
 
   void vscode.window.showInformationMessage(
     existing
-      ? `已更新模型服务“${profile.name}”。`
-      : `已创建模型服务“${profile.name}”。`,
+      ? vscode.l10n.t('Updated model provider "{0}".', profile.name)
+      : vscode.l10n.t('Created model provider "{0}".', profile.name),
   );
 }
 
@@ -232,7 +267,9 @@ async function chooseProfile(
   const profiles = store.getProfiles();
   if (profiles.length === 0) {
     void vscode.window.showWarningMessage(
-      '还没有模型服务，请先选择“新建模型服务”。',
+      vscode.l10n.t(
+        'No model providers exist yet. Select "Create Model Provider" first.',
+      ),
     );
     return undefined;
   }
@@ -242,12 +279,12 @@ async function chooseProfile(
     profiles.map((profile) => ({
       label: profile.name,
       description: profile.model,
-      detail: `${profile.baseUrl}${profile.id === activeId ? '（默认）' : ''}`,
+      detail: `${profile.baseUrl}${profile.id === activeId ? vscode.l10n.t(' (default)') : ''}`,
       profile,
     })),
     {
       title,
-      placeHolder: '选择模型服务配置档',
+      placeHolder: vscode.l10n.t('Select a model provider profile'),
     },
   );
 
@@ -260,23 +297,25 @@ async function chooseMaxTokensParameter(
   const choices: Array<vscode.QuickPickItem & { value: MaxTokensParameter }> = [
     {
       label: 'max_tokens',
-      description: '大多数 OpenAI 兼容服务使用此字段',
+      description: vscode.l10n.t('Used by most OpenAI-compatible providers'),
       value: 'max_tokens',
     },
     {
       label: 'max_completion_tokens',
-      description: '部分较新的 OpenAI 兼容模型使用此字段',
+      description: vscode.l10n.t('Used by some newer OpenAI-compatible models'),
       value: 'max_completion_tokens',
     },
     {
-      label: '不发送最大输出参数',
-      description: '服务不接受 max_tokens 类字段时使用',
+      label: vscode.l10n.t('Do not send a maximum output parameter'),
+      description: vscode.l10n.t(
+        'Use when the provider does not accept a max_tokens-style field',
+      ),
       value: 'none',
     },
   ];
 
   const selected = await vscode.window.showQuickPick(choices, {
-    title: '最大输出参数',
+    title: vscode.l10n.t('Maximum Output Parameter'),
     placeHolder: current ?? 'max_tokens',
   });
 
@@ -294,7 +333,7 @@ async function testProfile(
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: `正在测试模型服务“${profile.name}”`,
+        title: vscode.l10n.t('Testing model provider "{0}"', profile.name),
         cancellable: true,
       },
       async (_progress, token) => {
@@ -318,17 +357,20 @@ async function testProfile(
       },
     );
     void vscode.window.showInformationMessage(
-      `模型服务“${profile.name}”连接成功。`,
+      vscode.l10n.t(
+        'Model provider "{0}" connected successfully.',
+        profile.name,
+      ),
     );
   } catch (error) {
     void vscode.window.showErrorMessage(
-      `模型服务测试失败：${toErrorMessage(error)}`,
+      vscode.l10n.t('Model provider test failed: {0}', toErrorMessage(error)),
     );
   }
 }
 
 function validateRequiredText(value: string): string | undefined {
-  return value.trim() ? undefined : '此项不能为空。';
+  return value.trim() ? undefined : vscode.l10n.t('This field is required.');
 }
 
 function validateBaseUrl(value: string): string | undefined {
@@ -359,20 +401,29 @@ function parseHeaders(value: string): Record<string, string> | undefined {
   try {
     parsed = JSON.parse(value) as unknown;
   } catch {
-    throw new Error('请求头必须是有效的 JSON 对象。');
+    throw new Error(
+      vscode.l10n.t('Request headers must be a valid JSON object.'),
+    );
   }
 
   if (!isRecord(parsed)) {
-    throw new Error('请求头必须是 JSON 对象。');
+    throw new Error(vscode.l10n.t('Request headers must be a JSON object.'));
   }
 
   const headers: Record<string, string> = {};
   for (const [name, headerValue] of Object.entries(parsed)) {
     if (!/^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/.test(name)) {
-      throw new Error(`请求头名称“${name}”无效。`);
+      throw new Error(
+        vscode.l10n.t('Invalid request header name: "{0}".', name),
+      );
     }
     if (typeof headerValue !== 'string') {
-      throw new Error(`请求头“${name}”的值必须是字符串。`);
+      throw new Error(
+        vscode.l10n.t(
+          'The value of request header "{0}" must be a string.',
+          name,
+        ),
+      );
     }
     headers[name] = headerValue;
   }

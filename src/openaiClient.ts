@@ -1,3 +1,5 @@
+import * as vscode from 'vscode';
+
 import type { ChatMessage, ProviderProfile } from './types';
 
 export interface CompletionOptions {
@@ -51,7 +53,11 @@ export class OpenAICompatibleClient {
         }
 
         throw new Error(
-          `无法连接到模型服务“${this.profile.name}”：${toErrorMessage(error)}`,
+          vscode.l10n.t(
+            'Unable to connect to model provider "{0}": {1}',
+            this.profile.name,
+            toErrorMessage(error),
+          ),
         );
       }
 
@@ -72,21 +78,35 @@ export class OpenAICompatibleClient {
           responseText.slice(0, 500) ||
           response.statusText;
         throw new Error(
-          `模型服务“${this.profile.name}”在 ${endpoint} 返回 HTTP ${response.status}：${details}`,
+          vscode.l10n.t(
+            'Model provider "{0}" returned HTTP {1} from {2}: {3}',
+            this.profile.name,
+            response.status,
+            endpoint,
+            details,
+          ),
         );
       }
 
       const content = extractCompletionText(payload);
       if (!content?.trim()) {
         throw new Error(
-          `模型服务“${this.profile.name}”没有返回可用的文本内容。`,
+          vscode.l10n.t(
+            'Model provider "{0}" did not return usable text content.',
+            this.profile.name,
+          ),
         );
       }
 
       return content;
     }
 
-    throw new Error(`模型服务“${this.profile.name}”没有可用的 API 端点。`);
+    throw new Error(
+      vscode.l10n.t(
+        'Model provider "{0}" has no usable API endpoint.',
+        this.profile.name,
+      ),
+    );
   }
 }
 
@@ -176,7 +196,7 @@ function buildHeaders(
 function normalizeBaseUrl(baseUrl: string): URL {
   const value = baseUrl.trim();
   if (!value) {
-    throw new Error('API 基地址不能为空。');
+    throw new Error(vscode.l10n.t('The API base URL cannot be empty.'));
   }
 
   const withProtocol = addProtocol(value);
@@ -184,15 +204,19 @@ function normalizeBaseUrl(baseUrl: string): URL {
   try {
     url = new URL(withProtocol);
   } catch {
-    throw new Error('请输入有效的 API 基地址。');
+    throw new Error(vscode.l10n.t('Enter a valid API base URL.'));
   }
 
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
-    throw new Error('API 基地址只支持 http:// 或 https://。');
+    throw new Error(
+      vscode.l10n.t('The API base URL must use http:// or https://.'),
+    );
   }
 
   if (!url.hostname) {
-    throw new Error('API 基地址缺少域名或主机地址。');
+    throw new Error(
+      vscode.l10n.t('The API base URL is missing a domain or host.'),
+    );
   }
 
   url.hash = '';
@@ -210,7 +234,7 @@ function addProtocol(value: string): string {
   }
 
   if (/^https?:/i.test(value) || /^[a-z][a-z\d+.-]*:\/\//i.test(value)) {
-    throw new Error('API 基地址协议格式不正确。');
+    throw new Error(vscode.l10n.t('The API base URL protocol is malformed.'));
   }
 
   return `${isLocalHost(value) ? 'http' : 'https'}://${value}`;
