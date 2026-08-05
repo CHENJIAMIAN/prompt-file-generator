@@ -1,5 +1,12 @@
 # 提示词文件生成器
 
+<!-- codex-github-rules:bilingual-summary -->
+> **中文简介**：通过 VS Code 资源管理器和 OpenAI 兼容 API 生成提示词派生文件
+
+> **English summary**: Generate prompt-derived files from VS Code Explorer using OpenAI-compatible APIs
+
+---
+
 一个 VS Code 扩展：在资源管理器中选中一个或多个文本文件，右键输入提示词，为每个源文件生成一份新文件。它使用任意支持 OpenAI Chat Completions 协议的模型服务。
 
 例如同时选中 `A.ts`、`B.ts`、`C.ts` 并输入“将注释翻译成英文”，会在各自目录生成类似：
