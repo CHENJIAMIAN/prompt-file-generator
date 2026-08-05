@@ -1,3 +1,5 @@
+[English](./README.en.md)
+
 # 提示词文件生成器
 
 <!-- codex-github-rules:bilingual-summary -->
